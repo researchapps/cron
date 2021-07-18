@@ -1,0 +1,35 @@
+name: Generate Updated Data
+
+on:
+  schedule:
+    - cron: 0 5 * * *
+
+jobs:
+  generate-catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: generate-catalog
+        shell: bash -l {0}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install -r requirements.txt
+          python analyze-cron.py
+      - name: Commit files
+        id: commit
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/
+          git commit -m "Add changes" -a
+          changes=$(git diff --name-only | wc -l)
+          git status
+          printf "Changes - $changes\n"
+
+      - name: Push changes
+        continue-on-error: true
+        uses: ad-m/github-push-action@057a6ba835d986bfe495dd476a6c4db1d5f9503c
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
