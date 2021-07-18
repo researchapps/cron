@@ -1,0 +1,6 @@
+pygithub
+gitpython
+pyaml
+#croniter
+pretty-cron
+cron-descriptor
