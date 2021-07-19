@@ -52,8 +52,9 @@ def read_json(path):
         content = json.loads(fd.read())
     return content
 
+
 def write_json(content, path):
-    with open(path, 'w') as fd:
+    with open(path, "w") as fd:
         fd.write(json.dumps(content, indent=4))
 
 
@@ -93,8 +94,15 @@ def convert_to_frequency(seconds):
 
     weeks = seconds // seconds_in_week
     days = (seconds - (weeks * seconds_in_week)) // seconds_in_day
-    hours = (seconds - (weeks * seconds_in_week) - (days * seconds_in_day)) // seconds_in_hour
-    minutes = (seconds - (weeks * seconds_in_week) - (days * seconds_in_day) - (hours * seconds_in_hour)) // seconds_in_minute
+    hours = (
+        seconds - (weeks * seconds_in_week) - (days * seconds_in_day)
+    ) // seconds_in_hour
+    minutes = (
+        seconds
+        - (weeks * seconds_in_week)
+        - (days * seconds_in_day)
+        - (hours * seconds_in_hour)
+    ) // seconds_in_minute
 
     # Only include if not 0!
     result = ""
@@ -121,7 +129,9 @@ def do_code_search(string):
     """
     Do a code search for a query string
     """
-    code_search = g.search_code(string, sort="indexed", order=random.choice(["asc", "desc"]))
+    code_search = g.search_code(
+        string, sort="indexed", order=random.choice(["asc", "desc"])
+    )
     total = code_search.totalCount
     print("Found %s results from code search" % total)
     return code_search
@@ -170,14 +180,14 @@ def download_repos(code_search):
             try:
                 filepath = os.path.join(tmp, filename.path)
                 content = read_yaml(filepath)
-             
+
                 # Weird - for some reason the key "on" is read as True?
                 key = True
                 if key not in content and "on" in content:
                     key = "on"
                 if "schedule" in content[key]:
-                    crons[repo_name][filename.path] = content[key]['schedule']
-            
+                    crons[repo_name][filename.path] = content[key]["schedule"]
+
             except:
                 print("Issue reading %s" % filepath)
     return crons
@@ -192,18 +202,18 @@ def calculate_frequencies(crons):
         for filename, cronlist in files.items():
             for entry in cronlist:
                 if "cron" not in entry:
-                    continue     
+                    continue
                 # Doesn't allow ? (which means doesn't matter)
-                entry['cron'] = entry['cron'].replace("?", "*")
-                cron = croniter(entry['cron'])
+                entry["cron"] = entry["cron"].replace("?", "*")
+                cron = croniter(entry["cron"])
                 timestamp1 = int(cron.get_next())
                 timestamp2 = int(cron.get_next())
-                diff = timestamp2-timestamp1
-                 
+                diff = timestamp2 - timestamp1
+
                 # Start with seconds so we can sort!
                 if diff not in differences:
                     differences[diff] = 0
-                differences[diff] +=1
+                differences[diff] += 1
 
     # Sort by key (seconds) AND frequency
     by_freq = sorted(differences.items(), key=operator.itemgetter(0), reverse=True)
@@ -212,11 +222,12 @@ def calculate_frequencies(crons):
     diffs = {"by_freq": {}, "by_count": {}}
     for diffset in by_freq:
         human_readable = convert_to_frequency(diffset[0])
-        diffs['by_freq'][human_readable] = diffset[1]
+        diffs["by_freq"][human_readable] = diffset[1]
     for diffset in by_count:
         human_readable = convert_to_frequency(diffset[0])
-        diffs['by_count'][human_readable] = diffset[1]
+        diffs["by_count"][human_readable] = diffset[1]
     return diffs
+
 
 def calculate_times_descriptions(crons):
     """
@@ -229,30 +240,33 @@ def calculate_times_descriptions(crons):
         for filename, cronlist in files.items():
             for entry in cronlist:
                 if "cron" not in entry:
-                    continue     
+                    continue
 
                 # Doesn't allow ? (which means doesn't matter)
-                description = pretty_cron.prettify_cron(entry['cron'])
+                description = pretty_cron.prettify_cron(entry["cron"])
                 if not description.startswith("At"):
-                    description = get_description(entry['cron'])
- 
+                    description = get_description(entry["cron"])
+
                 if description not in descriptions:
                     descriptions[description] = 0
-                descriptions[description] +=1
-                                    
+                descriptions[description] += 1
+
                 # If we have a timestamp, capture it!
                 match = re.search("[0-9]{2}:[0-9]{2}", description)
                 if not match:
                     continue
                 match = match.group()
- 
+
                 if match not in times:
                     times[match] = 0
-                times[match] +=1
+                times[match] += 1
 
     # Sort from start to end
     ordered = sorted(times.items(), key=operator.itemgetter(0))
-    descriptions = {k: v for k, v in sorted(descriptions.items(), reverse=True, key=lambda item: item[1])}
+    descriptions = {
+        k: v
+        for k, v in sorted(descriptions.items(), reverse=True, key=lambda item: item[1])
+    }
     return ordered, descriptions
 
 
@@ -262,7 +276,16 @@ def calculate_day_of_week(descriptions):
     """
     day_of_week = {}
     for description, count in descriptions.items():
-        keys = ["day", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        keys = [
+            "day",
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ]
         for key in keys:
             key = "every %s" % key
             if key in description:
@@ -271,7 +294,10 @@ def calculate_day_of_week(descriptions):
                 day_of_week[key] += 1
 
     # Sort!
-    day_of_week = {k: v for k, v in sorted(day_of_week.items(), reverse=True, key=lambda item: item[1])}
+    day_of_week = {
+        k: v
+        for k, v in sorted(day_of_week.items(), reverse=True, key=lambda item: item[1])
+    }
     return day_of_week
 
 
@@ -280,15 +306,18 @@ def run_username_analysis(usernames):
     Run a cron analysis for a single user account
     """
     users = " ".join(["user:%s" % user for user in usernames])
-    code_search = do_code_search('"cron:" path:.github/workflows language:YAML %s' % users)
+    code_search = do_code_search(
+        '"cron:" path:.github/workflows language:YAML %s' % users
+    )
     crons = download_repos(code_search)
 
     # Create username specific output directory
     dirname = "-".join(usernames)
     data_dir = os.path.join(data_dir, dirname)
-    if not os.path.exists(data_dir)
+    if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     run_common_analysis(crons, data_dir)
+
 
 def run_common_analysis(crons, data_dir):
     """
@@ -303,13 +332,13 @@ def run_common_analysis(crons, data_dir):
     write_json(diffs, os.path.join(data_dir, "frequencies.json"))
 
     # Given once a day, what time?
-    # Or anything with a time    
+    # Or anything with a time
     times, descriptions = calculate_times_descriptions(crons)
     write_json(times, os.path.join(data_dir, "times.json"))
     write_json(descriptions, os.path.join(data_dir, "descriptions.json"))
 
     # Day of week (or every day)
-    day_of_week = calculate_day_of_week(descriptions)    
+    day_of_week = calculate_day_of_week(descriptions)
     write_json(day_of_week, os.path.join(data_dir, "day_of_week.json"))
 
 
