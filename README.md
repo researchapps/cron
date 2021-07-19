@@ -2,7 +2,7 @@
 
 When do we run GitHub cron jobs?
 
-**under development**
+⭐️ [Here is what I found](https://researchapps.github.io/cron/) ⭐️
 
 ## Background
 
@@ -13,7 +13,6 @@ cron jobs, as evidenced by their github workflow files.
 
 I can only sample a subset of search results, so this analysis should be considered
 just a sample.
-
 
 ## Usage
 
@@ -35,6 +34,14 @@ And run the script to generate the data:
 $ python analyze-cron.py
 ```
 
-This will generate data in [data](data) that I'll eventually visualize.
+Without a username (above) will do a general GitHub search with up to 1K results.
+You can also add one or more usernames to search for specific orgs/users:
+
+```bash
+$ python analyze-cron.py vsoch
+```
+
+This will generate data in [data](data) that renders into [index.html](index.html).
+Example data is provided here, along with generating for [my username](data/vsoch).
 There are over 400K results, but we can only get 1000, so it's just a small sample.
 If you run this again, you will likely get different results as it's based on indexing.

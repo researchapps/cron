@@ -1,0 +1,289 @@
+<html lang="en"><head>
+	<meta charset="UTF-8">
+	<title>GitHub Workflow Scheduled Cron - when do we run it?</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&display=swap" rel="stylesheet"> 
+<style>
+body {  
+  background: #1D1F20;
+  padding: 16px;
+}
+
+.chart-container {
+  position: relative;
+  max-width: 1000px;
+  margin: auto;
+}
+
+h1  {
+  color: white;
+  font-family: 'Caveat Brush', cursive;
+  font-size: 60px;
+}
+
+p,ul,li {
+  color: #777;
+}
+
+h2  {
+  color: white;
+  font-family: 'Caveat Brush', cursive;
+  font-size: 60px;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="chart-container">
+    <h1>Let's Talk About Cron</h1>
+    <p>Laying awake at night, you bolt up from an unsettling dream, as if there is something wrong in the universe and your subconscious has realized it. Perhaps the masters of time are out of balance, or the dictators of our automated universe are making their needs known. "Oh no," you wonder. "Could it be... cron?"
+    </p>
+    <p>Whether it's the start of a nightmare or the beginning of a day in reality, automating our workflows is something that we as developers do every day. Like brushing teeth, we probably copy paste from an instruction manual or previous script, and get on with our day. But what if our behavior has led to an imbalance? Or in other words (what I woke up this morning pondering) is what kind of collective decisions are we making with respect to cron?</p>
+    
+    <p>For those that aren't familiar, GitHub workflows has an ability to <a href="https://docs.github.com/en/actions/reference/events-that-trigger-workflows#schedule" target="_blank">schedule a workflow</a>, meaning we can use <a href="https://crontab.guru/" target="_blank">cron</a> to say "Run this once a week, on Sunday, at 2:00am" and pretty much any interval that you'd like.</p>
+    
+    <p>The problem arises because (I suspect) people are uncreative with their choices of time. Even worse, they probably just copy paste from the GitHub (or other) instructions. To test my feeling of dread that we are making sloppy decisions about our cron, I did a small analysis. I created a <a href="https://github.com/researchapps/cron" target="_blank">simple project</a> to query for a sample of 1000 GitHub workflow files that use cron, and then take a look at some details. This post that lives alongside the repository is what I found.</p>
+
+    <h2>At what frequency?</h2>
+    <p>For approximately 1000 GitHub workflow files with scheduled events, I looked at the frequency of the schedule. By far, the most common frequencies are <b>once a week</b>, and <b>once a day</b> (regardless of time).</p>
+    <canvas id="frequencies"></canvas>
+    <p>The "4 weeks 3 days" is what we would call a month, and "52 weeks 1 day" is obviously a year. I figured out these frequencies by first generating two timestamps for a cron entry, calculating the difference between the two in seconds, and then converting the seconds into weeks, days, hours, and minutes. I'm really interested to know what jobs are being run every minute, or even 15 or 30 minutes.</p>
+    <h2>At what time of day?</h2>
+    <p>Surely once a day or week isn't bad as long as we space the running times out into equal buckets, right? Unfortunately if we look at the timestamps, we see that most people are using the easiest example to look up - 00:00 (they might assume midnight), and then another peak at 7:00 UTC and a second at 12:00 UTC.</p>
+    <canvas id="times"></canvas>
+    <p>If I had to guess, I'd say the first group copy pasted from <a href="https://crontab.guru/" target="_blank">crontab.guru</a> without considering the times are in UTC (00:00 UTC is 5:00pm in San Francisco, which I mention since a lot of tech is there), the second group might have actually considered UTC, and chose the correct midnight (7:00 UTC is 9:00am in Germany, midnight in San Francisco), and the third group likely thought about it too (12:00 UTC is 5:00am San Francisco, 10:00pm in Australia). It's hard to say, but probably most people setting actions don't consider converting from UTC, or maybe don't care.</p>
+
+    <h2>What day of the week?</h2>
+    <p>Before I looked at the data, my guess would have been the weekend days, since that's when people aren't working. But I was surprised to see that the most common day is "every day," followed by Monday and then Sunday.</p>
+    <canvas id="days"></canvas>
+    <p>This makes a lot of sense - and I feel silly for not realizing that a good chunk of my own runs I do on a nightly basis. As for why Monday beats Sunday? I have no idea</p>
+
+    <h2>What about edge cases?</h2>
+    <p>To be fair, to do this analysis I converted cron schedule strings into timestamps and descriptions, and did more parsing. If you want to see the raw data you can see it in the <a href="https://github.com/researchapps/cron/tree/main/data" target="_blank">data folder</a>, and here I'll show you raw descriptions</p>
+    <canvas id="descriptions"></canvas>
+    <p>Yeah I know it's kind of small, it's getting really late and I don't have the energy left to do a different kind of plot. But if you carefully mouse over the strings, you'll see quite a range in values - everything from "At 12 minutes past the hour, every 6 hours" to "At 03:11 every day." It kind of makes me wonder if people thought about these scheduled events or just entered numbers at random.</p>
+
+    <h2>What did I learn?</h2>
+    <p>From this very brief, just-a-few-hours-before-bed-in-my-pajamas analysis, I sense that:
+       <ul>
+         <li>Times aren't always considered in UTC</li>
+         <li>We either copy paste common patterns or are really un-creative in our decisions for scheduling.</li>         
+         <li>It seems more common to schedule things on a weekly or daily frequency than any other</li>
+       </ul>
+    </p>
+    <p>At face value, it kind of seems like we are being a little sloppy, at least from this random sample (the 1000 most recently indexed files with a cron: schedule entry). I mean, how should GitHub handle many more requests to run jobs on specific days per week or times? Have we even validated that the jobs are actually run at those times? Couldn't there just be an option to say "run for me once a (X) and then let GitHub choose the day/month/hour that takes into consideration all the other jobs? Or maybe GitHub is such a monster now that it's backed by Microsoft that there are infinite resources for running things. I would suspect cron jobs are just a tiny fraction of all the jobs they run, which are going at all times. But there are so many more questions we could ask!</p>
+       <ul>
+         <li>What kind of workflows are run daily or weekly versus every 5 minutes?</li>
+         <li>Would we continue to see this pattern if we collected more data?</li>         
+         <li>What implications do our choices have for GitHub (or wherever we set a cron schedule?)</li>
+       </ul>    
+      <p>I'm particularly interested in the second point, or at least this feels like one I could tackle on my own. The first is interesting but would be a project for another day, and the third I'm not sure I could answer. So what do you think? Can we be more responsible with our cron-jobbing, or is this a nightmare that is likely to continue and will continue to keep a dinosaur like myself awake at night to wonder... "Something is not right. Could it be Cron?" 👻
+    </p>
+</div>
+
+<script>
+// Overall Frequency
+$.ajax({
+    url: 'data/frequencies.json'
+}).done(function (data) {
+
+    var labels = []
+    var values = []
+
+    $.each(data['by_count'], function(e, i){
+        labels.push(e)
+        values.push(i)
+    })
+
+    var data = {
+      labels: labels,
+      datasets: [{
+        label: "Frequencies",
+        backgroundColor: "rgba(255,99,132,0.2)",
+        borderColor: "rgba(255,99,132,1)",
+        borderWidth: 2,
+        hoverBackgroundColor: "rgba(255,99,132,0.4)",
+        hoverBorderColor: "rgba(255,99,132,1)",
+        data: values,
+      }]
+    };
+
+    var option = {
+      scales: {
+        yAxes: [{
+          stacked: true,
+          gridLines: {
+            display: true,
+            color: "rgba(255,99,132,0.2)"
+          }
+        }],
+        xAxes: [{
+          gridLines: {
+            display: false
+          }
+        }]
+      }
+    };
+
+    Chart.Bar('frequencies', {
+      options: option,
+      data: data
+    });
+});
+
+// Time of day (hour)
+$.ajax({
+    url: 'data/times.json'
+}).done(function (data) {
+
+    var labels = []
+    var values = []
+
+    $.each(data, function(e, i){
+        labels.push(i[0])
+        values.push(i[1])
+    })
+
+    var data = {
+      labels: labels,
+      datasets: [{
+        label: "Time of Day",
+        backgroundColor: "rgba(255,99,132,0.2)",
+        borderColor: "rgba(255,99,132,1)",
+        borderWidth: 2,
+        hoverBackgroundColor: "rgba(255,99,132,0.4)",
+        hoverBorderColor: "rgba(255,99,132,1)",
+        data: values,
+      }]
+    };
+
+    var option = {
+      scales: {
+        yAxes: [{
+          stacked: true,
+          gridLines: {
+            display: true,
+            color: "rgba(255,99,132,0.2)"
+          }
+        }],
+        xAxes: [{
+          gridLines: {
+            display: false
+          }
+        }]
+      }
+    };
+
+    Chart.Bar('times', {
+      options: option,
+      data: data
+    });
+});
+
+// Overall Frequency
+$.ajax({
+    url: 'data/day_of_week.json'
+}).done(function (data) {
+
+    var labels = []
+    var values = []
+
+    $.each(data, function(e, i){
+        labels.push(e)
+        values.push(i)
+    })
+
+    var data = {
+      labels: labels,
+      datasets: [{
+        label: "Frequencies",
+        backgroundColor: "rgba(255,99,132,0.2)",
+        borderColor: "rgba(255,99,132,1)",
+        borderWidth: 2,
+        hoverBackgroundColor: "rgba(255,99,132,0.4)",
+        hoverBorderColor: "rgba(255,99,132,1)",
+        data: values,
+      }]
+    };
+
+    var option = {
+      scales: {
+        yAxes: [{
+          stacked: true,
+          gridLines: {
+            display: true,
+            color: "rgba(255,99,132,0.2)"
+          }
+        }],
+        xAxes: [{
+          gridLines: {
+            display: false
+          }
+        }]
+      }
+    };
+
+    Chart.Bar('days', {
+      options: option,
+      data: data
+    });
+});
+
+// Descriptions
+$.ajax({
+    url: 'data/descriptions.json'
+}).done(function (data) {
+
+    var labels = []
+    var values = []
+
+    $.each(data, function(e, i){
+        labels.push(e)
+        values.push(i)
+    })
+
+    var data = {
+      labels: labels,
+      datasets: [{
+        label: "Frequencies",
+        backgroundColor: "rgba(255,99,132,0.2)",
+        borderColor: "rgba(255,99,132,1)",
+        borderWidth: 2,
+        hoverBackgroundColor: "rgba(255,99,132,0.4)",
+        hoverBorderColor: "rgba(255,99,132,1)",
+        data: values,
+      }]
+    };
+
+    var option = {
+      scales: {
+        yAxes: [{
+          stacked: true,
+          gridLines: {
+            display: true,
+            color: "rgba(255,99,132,0.2)"
+          }
+        }],
+        xAxes: [{
+          gridLines: {
+            display: false
+          }
+        }]
+      }
+    };
+
+    Chart.Bar('descriptions', {
+      options: option,
+      data: data
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+    "by_freq": {
+        "4 weeks 3 days": 2,
+        "1 weeks": 1,
+        "1 days": 5
+    },
+    "by_count": {
+        "1 days": 5,
+        "4 weeks 3 days": 2,
+        "1 weeks": 1
+    }
+}

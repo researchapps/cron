@@ -1,6 +1,6 @@
 pygithub
 gitpython
 pyaml
-#croniter
+croniter
 pretty-cron
 cron-descriptor

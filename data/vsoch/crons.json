@@ -1,0 +1,59 @@
+{
+    "vsoch/contributor-ci-llnl": {
+        ".github/workflows/update-ui.yaml": [
+            {
+                "cron": "0 3 * * *"
+            }
+        ]
+    },
+    "vsoch/opensource-heartbeat": {
+        ".github/workflows/generate-opensource-interface.yml": [
+            {
+                "cron": "30 2 * * *"
+            }
+        ]
+    },
+    "vsoch/llnl-contributors": {
+        ".github/workflows/main.yml": [
+            {
+                "cron": "0 3 * * *"
+            }
+        ]
+    },
+    "vsoch/chonker-awards": {
+        ".github/workflows/update-chonkers.yml": [
+            {
+                "cron": "0 1 * * *"
+            }
+        ]
+    },
+    "vsoch/caliper-metrics": {
+        ".github/workflows/update-database.yml": [
+            {
+                "cron": "0 1 * * *"
+            }
+        ]
+    },
+    "vsoch/docker-pull": {
+        ".github/workflows/pull.yml": [
+            {
+                "cron": "0 0 1 * *"
+            }
+        ]
+    },
+    "vsoch/sourcecred-cred": {},
+    "vsoch/search": {
+        ".github/workflows/render.yml": [
+            {
+                "cron": "0 0 * * 4"
+            }
+        ]
+    },
+    "vsoch/natacha-bot": {
+        ".github/workflows/main.yml": [
+            {
+                "cron": "0 0 1 * *"
+            }
+        ]
+    }
+}
