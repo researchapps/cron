@@ -38,7 +38,7 @@ $ python analyze-cron.py
 ```
 
 Without a username (above) will do a general GitHub search with up to 1K results.
-You can also add one or more usernames to search for specific orgs/users:
+You can also a username to search for specific orgs/users:
 
 ```bash
 $ python analyze-cron.py vsoch

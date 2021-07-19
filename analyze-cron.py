@@ -32,7 +32,6 @@ in_two_months = today + relativedelta(months=2)
 
 # We want the root
 here = os.path.abspath(os.path.dirname(__file__))
-data_dir = os.path.join(here, "data")
 
 # do not clone LFS files
 os.environ["GIT_LFS_SKIP_SMUDGE"] = "1"
@@ -142,8 +141,8 @@ def main():
     Entrypoint to run analysis
     """
     # Run analysis for a username
-    if len(sys.argv) >= 2:
-        run_username_analysis(sys.argv[1:])
+    if len(sys.argv) == 2:
+        run_username_analysis(sys.argv[1])
     else:
         run_analysis()
 
@@ -301,19 +300,17 @@ def calculate_day_of_week(descriptions):
     return day_of_week
 
 
-def run_username_analysis(usernames):
+def run_username_analysis(username):
     """
     Run a cron analysis for a single user account
     """
-    users = " ".join(["user:%s" % user for user in usernames])
     code_search = do_code_search(
-        '"cron:" path:.github/workflows language:YAML %s' % users
+        '"cron:" path:.github/workflows language:YAML user:%s' % username
     )
     crons = download_repos(code_search)
 
-    # Create username specific output directory
-    dirname = "-".join(usernames)
-    data_dir = os.path.join(data_dir, dirname)
+    data_dir = os.path.join(here, "data")
+    data_dir = os.path.join(data_dir, username)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     run_common_analysis(crons, data_dir)
@@ -345,6 +342,7 @@ def run_common_analysis(crons, data_dir):
 def run_analysis():
 
     # Load previous crons so we acculumate over time
+    data_dir = os.path.join(here, "data")
     data_path = os.path.join(data_dir, "crons.json")
     crons = read_json(data_path)
     code_search = do_code_search('"cron:" path:.github/workflows language:YAML')
