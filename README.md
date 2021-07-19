@@ -2,7 +2,10 @@
 
 When do we run GitHub cron jobs?
 
+![img/cron.png](img/cron.png)
+
 ⭐️ [Here is what I found](https://researchapps.github.io/cron/) ⭐️
+
 
 ## Background
 
